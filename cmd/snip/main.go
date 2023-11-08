@@ -8,8 +8,8 @@ import (
 
 	"github.com/sarulabs/di/v2"
 	"github.com/sirupsen/logrus"
-	"github.com/zekurio/redirector/internal/services/config"
-	"github.com/zekurio/redirector/internal/services/util/static"
+	"github.com/zekurio/snip/internal/services/config"
+	"github.com/zekurio/snip/internal/services/util/static"
 )
 
 var (
