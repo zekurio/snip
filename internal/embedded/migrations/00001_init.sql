@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS links (
-    id varchar(8) PRIMARY KEY,
-    url text NOT NULL,
-    user_id integer NOT NULL REFERENCES users(id), 
+    id varchar(8) PRIMARY KEY, 
+    url text NOT NULL, 
+    user_uuid uuid NOT NULL REFERENCES users(uuid), 
     created_at timestamp NOT NULL DEFAULT NOW(),
     last_access timestamp NOT NULL DEFAULT NOW()
 );

@@ -3,17 +3,19 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/pressly/goose/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/embedded"
 	"github.com/zekurio/snip/internal/models"
 	"github.com/zekurio/snip/internal/services/database"
+	"github.com/zekurio/snip/pkg/randutils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Postgres struct {
-	database.Database
+	database.IDatabase
 
 	db *sql.DB
 }
@@ -93,3 +95,68 @@ func (p *Postgres) GetUserByID(id string) (*models.User, error) {
 }
 
 // Links
+
+func (p *Postgres) CreateLink(url, uuid string) (*models.Link, error) {
+	id, err := randutils.GetRandBase64Str(8)
+	if err != nil {
+		return nil, err
+	}
+
+	query := `INSERT INTO links (id, url, uuid) VALUES ($1, $2, $3) RETURNING created_at`
+	var createdAt time.Time
+
+	err = p.db.QueryRow(query, id, url, uuid).Scan(&createdAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Link{ID: id, URL: url, UserUUID: uuid, CreatedAt: createdAt}, nil
+}
+
+func (p *Postgres) GetLinkByID(id string) (*models.Link, error) {
+	query := `SELECT url, user_uuid, created_at, last_access FROM links WHERE id = $1`
+	var link models.Link
+	err := p.db.QueryRow(query, id).Scan(&link.URL, &link.UserUUID, &link.CreatedAt, &link.LastAccess)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no link found with id %s", id)
+		}
+		return nil, err
+	}
+
+	return &link, nil
+}
+
+func (p *Postgres) GetLinksByUser(uuid string) ([]*models.Link, error) {
+	query := `SELECT id, url, created_at, last_access FROM links WHERE user_uuid = $1`
+	rows, err := p.db.Query(query, uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var links []*models.Link
+	for rows.Next() {
+		var link models.Link
+		err = rows.Scan(&link.ID, &link.URL, &link.CreatedAt, &link.LastAccess)
+		if err != nil {
+			return nil, err
+		}
+
+		link.UserUUID = uuid
+		links = append(links, &link)
+	}
+
+	return links, nil
+}
+
+func (p *Postgres) DeleteLink(id string) error {
+	query := `DELETE FROM links WHERE id = $1`
+	_, err := p.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

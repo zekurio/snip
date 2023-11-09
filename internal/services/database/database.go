@@ -7,7 +7,6 @@ import (
 type DatabaseConfig struct {
 	Type     string
 	Postgres PostgresConfig
-	// TODO add redis config
 }
 
 type PostgresConfig struct {
@@ -18,8 +17,8 @@ type PostgresConfig struct {
 	Password string
 }
 
-// Database is an interface for our database drivers
-type Database interface {
+// IDatabase is an interface for our database drivers
+type IDatabase interface {
 
 	// Users
 
@@ -41,7 +40,7 @@ type Database interface {
 	GetLinkByID(id string) (*models.Link, error)
 
 	// GetLinksByUser returns all links for the given user
-	GetLinksByUser(user *models.User) ([]*models.Link, error)
+	GetLinksByUser(uuid string) ([]*models.Link, error)
 
 	// DeleteLink deletes a link with the given id
 	DeleteLink(id string) error

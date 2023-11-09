@@ -11,7 +11,7 @@ type User struct {
 type Link struct {
 	ID         string
 	URL        string
-	User       User
+	UserUUID   string
 	CreatedAt  time.Time
 	LastAccess time.Time
 }
