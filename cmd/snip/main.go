@@ -53,7 +53,7 @@ func main() {
 	diBuilder.Add(di.Def{
 		Name: static.DiWebserver,
 		Build: func(ctn di.Container) (interface{}, error) {
-			return nil, nil
+			return inits.InitWebserver(ctn), nil
 		},
 	})
 
@@ -68,7 +68,7 @@ func main() {
 		}
 	}(ctn)
 
-	ctn.Get(static.DiDatabase)
+	ctn.Get(static.DiWebserver)
 
 	// Block main go routine until one of the following
 	// specified exit sys calls occure.

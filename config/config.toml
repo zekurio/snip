@@ -4,3 +4,12 @@ Port = 5432
 Database = "snip"
 Username = "snip"
 Password = "snip"
+
+[Webserver]
+Addr = '0.0.0.0:8080'
+PublicAddr = 'http://localhost:8080'
+
+[Webserver.TLS]
+Enabled = false
+Cert = 'cert.pem'
+Key = 'key.pem'

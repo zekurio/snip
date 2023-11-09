@@ -7,6 +7,7 @@ import (
 	"github.com/zekurio/snip/internal/models"
 	"github.com/zekurio/snip/internal/services/util/static"
 	v1 "github.com/zekurio/snip/internal/services/webserver/v1"
+	"github.com/zekurio/snip/internal/services/webserver/v1/controllers"
 )
 
 type WebServer struct {
@@ -26,6 +27,8 @@ func New(ctn di.Container) (ws *WebServer, err error) {
 		DisableStartupMessage: true,
 		ProxyHeader:           "X-Forwarded-For",
 	})
+
+	new(controllers.RedirectController).Setup(ws.container, ws.app.Group("/"))
 
 	ws.registerRouter(new(v1.Router), []string{"/api/v1", "/api"})
 
