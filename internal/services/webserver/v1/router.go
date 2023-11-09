@@ -15,7 +15,7 @@ func (r *Router) SetContainer(ctn di.Container) {
 }
 
 func (r *Router) Route(router fiber.Router) {
+
 	// register controllers
-	new(controllers.UsersController).Setup(r.ctn, router.Group("/users"))
 	new(controllers.LinksController).Setup(r.ctn, router.Group("/links"))
 }
