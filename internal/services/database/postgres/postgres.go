@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/pressly/goose/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/embedded"
@@ -20,15 +22,17 @@ type Postgres struct {
 	db *sql.DB
 }
 
-func NewPostgres(c database.PostgresConfig) (p *Postgres, err error) {
+func NewPostgres(c models.PostgresConfig) (pg *Postgres, err error) {
+	pg = new(Postgres)
+
 	dsn := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
 		c.Host, c.Port, c.Database, c.Username, c.Password)
-	p.db, err = sql.Open("postgres", dsn)
+	pg.db, err = sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.db.Ping()
+	err = pg.db.Ping()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +40,7 @@ func NewPostgres(c database.PostgresConfig) (p *Postgres, err error) {
 	goose.SetBaseFS(embedded.Migrations)
 	goose.SetDialect("postgres")
 	goose.SetLogger(logrus.StandardLogger())
-	err = goose.Up(p.db, "migrations/postgres")
+	err = goose.Up(pg.db, "migrations")
 	if err != nil {
 		return nil, err
 	}

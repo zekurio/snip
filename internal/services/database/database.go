@@ -4,21 +4,9 @@ import (
 	"github.com/zekurio/snip/internal/models"
 )
 
-type DatabaseConfig struct {
-	Type     string
-	Postgres PostgresConfig
-}
-
-type PostgresConfig struct {
-	Host     string
-	Port     int
-	Database string
-	Username string
-	Password string
-}
-
 // IDatabase is an interface for our database drivers
 type IDatabase interface {
+	Close() error
 
 	// Users
 
@@ -34,7 +22,7 @@ type IDatabase interface {
 	// Links
 
 	// CreateLink creates a new link with the given url and user
-	CreateLink(url string, user *models.User) (*models.Link, error)
+	CreateLink(url, uuid string) (*models.Link, error)
 
 	// GetLinkByID returns a link with the given id
 	GetLinkByID(id string) (*models.Link, error)

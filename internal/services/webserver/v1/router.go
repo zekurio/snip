@@ -1,16 +1,17 @@
 package v1
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/sarulabs/di/v2"
+)
 
 type Router struct {
+	ctn di.Container
 }
 
-func (r *Router) Route(router *fiber.Router) {
+func (r *Router) SetContainer(ctn di.Container) {
+	r.ctn = ctn
+}
 
-	// TODO write auth middleware
-
-	// TODO write controllers for the API
-
-	// TODO either add redirecting here or to the webserver package
-
+func (r *Router) Route(router fiber.Router) {
 }
