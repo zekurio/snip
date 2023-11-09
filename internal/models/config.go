@@ -16,13 +16,19 @@ type PostgresConfig struct {
 }
 
 type WebserverConfig struct {
-	Addr       string
-	PublicAddr string
-	TLS        TLSConfig
+	Addr        string
+	PublicAddr  string
+	TLS         TLSConfig
+	AccessToken AccessToken
 }
 
 type TLSConfig struct {
 	Enabled bool
 	Cert    string
 	Key     string
+}
+
+type AccessToken struct {
+	Secret          string
+	LifetimeSeconds int
 }

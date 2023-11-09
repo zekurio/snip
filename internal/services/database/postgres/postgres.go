@@ -3,7 +3,6 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	_ "github.com/lib/pq"
 
@@ -12,8 +11,6 @@ import (
 	"github.com/zekurio/snip/internal/embedded"
 	"github.com/zekurio/snip/internal/models"
 	"github.com/zekurio/snip/internal/services/database"
-	"github.com/zekurio/snip/pkg/randutils"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Postgres struct {
@@ -54,29 +51,23 @@ func (p *Postgres) Close() error {
 
 // Users
 
-func (p *Postgres) CreateUser(email, password string) (*models.User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func (p *Postgres) AddUpdateUser(user *models.User) error {
+	query := `INSERT INTO users (uuid, email, password) VALUES ($1, $2, $3) ON CONFLICT (uuid) DO UPDATE SET email = $2, password = $3`
+	_, err := p.db.Exec(query, user.UUID, user.Username, user.Password)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING uuid`
-	var uuid string
-	err = p.db.QueryRow(query, email, string(hashedPassword)).Scan(&uuid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.User{UUID: uuid, Email: email}, nil
+	return nil
 }
 
-func (p *Postgres) GetUserByEmail(email string) (*models.User, error) {
-	query := `SELECT uuid, password FROM users WHERE email = $1`
+func (p *Postgres) GetUserByUsername(username string) (*models.User, error) {
+	query := `SELECT uuid, password FROM users WHERE username = $1`
 	var user models.User
-	err := p.db.QueryRow(query, email).Scan(&user.UUID, &user.Password)
+	err := p.db.QueryRow(query, username).Scan(&user.UUID, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no user found with email %s", email)
+			return nil, fmt.Errorf("no user found with email %s", username)
 		}
 		return nil, err
 	}
@@ -87,7 +78,7 @@ func (p *Postgres) GetUserByEmail(email string) (*models.User, error) {
 func (p *Postgres) GetUserByID(id string) (*models.User, error) {
 	query := `SELECT email, password FROM users WHERE uuid = $1`
 	var user models.User
-	err := p.db.QueryRow(query, id).Scan(&user.Email, &user.Password)
+	err := p.db.QueryRow(query, id).Scan(&user.Username, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no user found with id %s", id)
@@ -100,28 +91,20 @@ func (p *Postgres) GetUserByID(id string) (*models.User, error) {
 
 // Links
 
-func (p *Postgres) CreateLink(url, uuid string) (*models.Link, error) {
-	id, err := randutils.GetRandBase64Str(8)
+func (p *Postgres) AddUpdateLink(link *models.Link) error {
+	query := `INSERT INTO links (id, url, user_uuid, created_at, last_access) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET url = $2, last_access = $5`
+	_, err := p.db.Exec(query, link.ID, link.URL, link.UserID, link.CreatedAt, link.LastAccess)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	query := `INSERT INTO links (id, url, uuid) VALUES ($1, $2, $3) RETURNING created_at`
-	var createdAt time.Time
-
-	err = p.db.QueryRow(query, id, url, uuid).Scan(&createdAt)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.Link{ID: id, URL: url, UserUUID: uuid, CreatedAt: createdAt}, nil
+	return nil
 }
 
 func (p *Postgres) GetLinkByID(id string) (*models.Link, error) {
 	query := `SELECT url, user_uuid, created_at, last_access FROM links WHERE id = $1`
 	var link models.Link
-	err := p.db.QueryRow(query, id).Scan(&link.URL, &link.UserUUID, &link.CreatedAt, &link.LastAccess)
+	err := p.db.QueryRow(query, id).Scan(&link.URL, &link.UserID, &link.CreatedAt, &link.LastAccess)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no link found with id %s", id)
@@ -148,7 +131,7 @@ func (p *Postgres) GetLinksByUser(uuid string) ([]*models.Link, error) {
 			return nil, err
 		}
 
-		link.UserUUID = uuid
+		link.UserID = uuid
 		links = append(links, &link)
 	}
 

@@ -10,19 +10,22 @@ type IDatabase interface {
 
 	// Users
 
-	// CreateUser creates a new user with the given email and password
-	CreateUser(email, password string) (*models.User, error)
+	// AddUpdateUser adds or updates a user
+	AddUpdateUser(user *models.User) error
 
-	// GetUserByEmail returns a user with the given email
-	GetUserByEmail(email string) (*models.User, error)
+	// GetUserByUsername returns a user with the given email
+	GetUserByUsername(username string) (*models.User, error)
 
 	// GetUserByID returns a user with the given id
 	GetUserByID(uuid string) (*models.User, error)
 
+	// DeleteUser deletes a user with the given id
+	DeleteUser(uuid string) error
+
 	// Links
 
-	// CreateLink creates a new link with the given url and user
-	CreateLink(url, uuid string) (*models.Link, error)
+	// AddUpdateLink adds or updates a link
+	AddUpdateLink(link *models.Link) error
 
 	// GetLinkByID returns a link with the given id
 	GetLinkByID(id string) (*models.Link, error)

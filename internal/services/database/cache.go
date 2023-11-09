@@ -30,15 +30,15 @@ func WrapCache(inheritedDB IDatabase, inheritedErr error) (wrappedDB IDatabase, 
 	return &cache, nil
 }
 
-func (c *DatabaseCache) CreateLink(url, uuid string) (*models.Link, error) {
-	link, err := c.IDatabase.CreateLink(url, uuid)
+func (c *DatabaseCache) AddUpdateLink(link *models.Link) error {
+	err := c.IDatabase.AddUpdateLink(link)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	c.cache.Store(ckey("link", link.ID), link)
 
-	return link, nil
+	return nil
 }
 
 func (c *DatabaseCache) GetLinkByID(id string) (*models.Link, error) {

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/sarulabs/di/v2"
 	"github.com/zekurio/snip/internal/services/database"
@@ -22,11 +24,16 @@ func (c *RedirectController) redirect(ctx *fiber.Ctx) error {
 
 	link, err := c.db.GetLinkByID(id)
 	if err != nil {
-		// TODO return an error page, for now just return a 404
-		return fiber.ErrNotFound
+		return fiber.ErrNotFound // TODO return a not found page later on
 	}
 
-	// TODO update link to set the new last access time
+	link.LastAccess = time.Now()
+
+	err = c.db.AddUpdateLink(link)
+	if err != nil {
+		// TODO this shouldn't happen
+		return fiber.ErrInternalServerError
+	}
 
 	return ctx.Redirect(link.URL)
 }
