@@ -57,7 +57,7 @@ func main() {
 		},
 	})
 
-	// Auth refresh token handler
+	// Auth refresh token dependency
 	diBuilder.Add(di.Def{
 		Name: static.DiAuthRefreshTokenHandler,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -65,7 +65,7 @@ func main() {
 		},
 	})
 
-	// Auth access token handler
+	// Auth access token dependency
 	diBuilder.Add(di.Def{
 		Name: static.DiAuthAccessTokenHandler,
 		Build: func(ctn di.Container) (interface{}, error) {
@@ -73,7 +73,15 @@ func main() {
 		},
 	})
 
-	// Auth middleware
+	// Login Handler dependency
+	diBuilder.Add(di.Def{
+		Name: static.DiAuthLoginHandler,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return auth.NewLoginHandler(ctn), nil
+		},
+	})
+
+	// Auth middleware dependency
 	diBuilder.Add(di.Def{
 		Name: static.DiAuthMiddleware,
 		Build: func(ctn di.Container) (interface{}, error) {

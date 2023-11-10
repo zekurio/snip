@@ -7,4 +7,5 @@ var (
 	DiAuthAccessTokenHandler  = "Di-Auth-AccessTokenHandler"
 	DiAuthRefreshTokenHandler = "Di-Auth-RefreshTokenHandler"
 	DiAuthMiddleware          = "Di-Auth-Middleware"
+	DiAuthLoginHandler        = "Di-Auth-LoginHandler"
 )

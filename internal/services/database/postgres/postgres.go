@@ -53,7 +53,7 @@ func (p *Postgres) Close() error {
 // Users
 
 func (p *Postgres) AddUpdateUser(user *models.User) error {
-	query := `INSERT INTO users (id, username, password) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET username = $2, password = $3`
+	query := `INSERT INTO users (user_id, username, password) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET username = $2, password = $3`
 	_, err := p.db.Exec(query, user.ID, user.Username, user.Password)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (p *Postgres) AddUpdateUser(user *models.User) error {
 }
 
 func (p *Postgres) GetUserByUsername(username string) (*models.User, error) {
-	query := `SELECT id, password FROM users WHERE username = $1`
+	query := `SELECT user_id, password FROM users WHERE username = $1`
 	var user models.User
 	err := p.db.QueryRow(query, username).Scan(&user.ID, &user.Password)
 	if err != nil {
@@ -77,7 +77,7 @@ func (p *Postgres) GetUserByUsername(username string) (*models.User, error) {
 }
 
 func (p *Postgres) GetUserByID(userID string) (*models.User, error) {
-	query := `SELECT username, password FROM users WHERE id = $1`
+	query := `SELECT username, password FROM users WHERE user_id = $1`
 	var user models.User
 	err := p.db.QueryRow(query, userID).Scan(&user.Username, &user.Password)
 	if err != nil {
@@ -93,8 +93,7 @@ func (p *Postgres) GetUserByID(userID string) (*models.User, error) {
 // Links
 
 func (p *Postgres) AddUpdateLink(link *models.Link) error {
-	query := `INSERT INTO links (id, redirect_url, owner_id, created_at, last_access)
-		VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET redirect_url = $2, last_access = $5`
+	query := `INSERT INTO links (id, redirect_url, owner_id, created_at, last_access) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET redirect_url = $2, last_access = $5`
 	_, err := p.db.Exec(query, link.ID, link.URL, link.OwnerID, link.CreatedAt, link.LastAccess)
 	if err != nil {
 		return err

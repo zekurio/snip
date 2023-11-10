@@ -18,6 +18,18 @@ func (c *LinksController) Setup(ctn di.Container, router fiber.Router) {
 }
 
 func (c *LinksController) getLinks(ctx *fiber.Ctx) error {
-	// TODO get current user, and get all links for that user
-	return ctx.SendString("TODO")
+	uuid := ctx.Locals("uuid").(string)
+
+	// query all links
+	links, err := c.db.GetLinksByUser(uuid)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "failed to get links",
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    links,
+	})
 }

@@ -50,6 +50,9 @@ func (ws *WebServer) ListenAndServeBlocking() error {
 		return ws.app.ListenTLS(ws.cfg.Addr, tls.Cert, tls.Key)
 	}
 
-	logrus.Infof("Starting webserver on %s", ws.cfg.Addr)
+	logrus.WithFields(logrus.Fields{
+		"addr":       ws.cfg.Addr,
+		"publicAddr": ws.cfg.PublicAddr,
+	}).Info("Starting webserver")
 	return ws.app.Listen(ws.cfg.Addr)
 }

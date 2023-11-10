@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"strings"
 	"time"
 
 	"github.com/zekurio/snip/internal/models"
@@ -12,23 +11,23 @@ import (
 	"github.com/sarulabs/di/v2"
 )
 
-type RefreshTokenRequestHandler struct {
+type LoginHandler struct {
 	accessTokenHandler  AccessTokenHandler
 	refreshTokenHandler RefreshTokenHandler
 }
 
-func NewRefreshTokenRequestHandler(container di.Container) *RefreshTokenRequestHandler {
-	return &RefreshTokenRequestHandler{
+func NewLoginHandler(container di.Container) *LoginHandler {
+	return &LoginHandler{
 		accessTokenHandler:  container.Get(static.DiAuthAccessTokenHandler).(AccessTokenHandler),
 		refreshTokenHandler: container.Get(static.DiAuthRefreshTokenHandler).(RefreshTokenHandler),
 	}
 }
 
-func (h *RefreshTokenRequestHandler) LoginFailedHandler(ctx *fiber.Ctx, status int, msg string) error {
+func (h *LoginHandler) LoginFailedHandler(ctx *fiber.Ctx, status int, msg string) error {
 	return fiber.NewError(status, msg)
 }
 
-func (h *RefreshTokenRequestHandler) BindRefreshToken(ctx *fiber.Ctx, uuid string) error {
+func (h *LoginHandler) BindRefreshToken(ctx *fiber.Ctx, uuid string) error {
 	ctx.Locals("uuid", uuid)
 
 	refreshToken, err := h.refreshTokenHandler.GetRefreshToken(uuid)
@@ -49,20 +48,15 @@ func (h *RefreshTokenRequestHandler) BindRefreshToken(ctx *fiber.Ctx, uuid strin
 	return nil
 }
 
-func (h *RefreshTokenRequestHandler) LoginSuccessHandler(ctx *fiber.Ctx, res models.LoginSuccessResponse) error {
-	if err := h.BindRefreshToken(ctx, res.User.ID); err != nil {
+func (h *LoginHandler) LoginSuccessHandler(ctx *fiber.Ctx, res *models.User) error {
+	if err := h.BindRefreshToken(ctx, res.ID); err != nil {
 		return err
 	}
 
-	location := "/"
-	if res.Redirect != "" {
-		location += strings.TrimLeft(res.Redirect, "/")
-	}
-
-	return ctx.Redirect(location, fiber.StatusTemporaryRedirect)
+	return nil
 }
 
-func (h *RefreshTokenRequestHandler) LogoutHandler(ctx *fiber.Ctx) error {
+func (h *LoginHandler) LogoutHandler(ctx *fiber.Ctx) error {
 	if uid, ok := ctx.Locals("uuid").(string); ok && uid != "" {
 		if err := h.refreshTokenHandler.RevokeToken(uid); err != nil {
 			return err
