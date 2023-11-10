@@ -31,3 +31,12 @@ func GetRandBase64Str(len int) (string, error) {
 
 	return base64.URLEncoding.EncodeToString(data)[:len], nil
 }
+
+func ForceRandBase64Str(len int) string {
+	res, err := GetRandBase64Str(len)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}

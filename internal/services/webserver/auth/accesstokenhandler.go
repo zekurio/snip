@@ -3,8 +3,9 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"github.com/zekurio/snip/internal/util/static"
 	"time"
+
+	"github.com/zekurio/snip/internal/util/static"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sarulabs/di/v2"

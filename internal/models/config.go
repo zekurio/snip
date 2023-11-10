@@ -1,6 +1,22 @@
 package models
 
-var DefaultConfig = Config{}
+import "github.com/zekurio/snip/pkg/randutils"
+
+var DefaultConfig = Config{
+	Webserver: WebserverConfig{
+		Addr:       ":80",
+		PublicAddr: "http://localhost:80",
+		AccessToken: AccessToken{
+			Secret:          randutils.ForceRandBase64Str(64),
+			LifetimeSeconds: 10 * 60,
+		},
+		TLS: TLSConfig{
+			Enabled: false,
+			Cert:    "",
+			Key:     "",
+		},
+	},
+}
 
 type Config struct {
 	Postgres  PostgresConfig
