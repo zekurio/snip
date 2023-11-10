@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sarulabs/di/v2"
 	"github.com/zekurio/snip/internal/services/database"
-	"github.com/zekurio/snip/internal/services/util/static"
+	"github.com/zekurio/snip/internal/util/static"
 )
 
 type LinksController struct {

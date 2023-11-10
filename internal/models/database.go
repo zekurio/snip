@@ -3,7 +3,7 @@ package models
 import "time"
 
 type User struct {
-	UUID     string
+	ID       string
 	Username string
 	Password string
 }
@@ -11,7 +11,7 @@ type User struct {
 type Link struct {
 	ID         string
 	URL        string
-	UserID     string
+	OwnerID    string
 	CreatedAt  time.Time
 	LastAccess time.Time
 }

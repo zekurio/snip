@@ -6,22 +6,30 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/zekurio/snip/internal/util/static"
+	static2 "github.com/zekurio/snip/internal/util/static"
+	"github.com/zekurio/snip/pkg/debug"
+
 	"github.com/sarulabs/di/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/inits"
 	"github.com/zekurio/snip/internal/models"
 	"github.com/zekurio/snip/internal/services/config"
 	"github.com/zekurio/snip/internal/services/database"
-	"github.com/zekurio/snip/internal/services/util/static"
+	"github.com/zekurio/snip/internal/services/webserver/auth"
 )
 
 var (
 	flagConfigPath = flag.String("c", "config.toml", "Path to config file")
+	flagDebug      = flag.Bool("debug", false, "Enable debug mode")
 )
 
 func main() {
 	// Parse command line flags
 	flag.Parse()
+
+	// Set debug mode
+	debug.SetEnabled(*flagDebug)
 
 	diBuilder, err := di.NewBuilder()
 	if err != nil {
@@ -30,7 +38,7 @@ func main() {
 
 	// Config dependency
 	diBuilder.Add(di.Def{
-		Name: static.DiConfig,
+		Name: static2.DiConfig,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return config.Parse(*flagConfigPath, "SNIP_", models.DefaultConfig)
 		},
@@ -38,7 +46,7 @@ func main() {
 
 	// Database and cache dependency
 	diBuilder.Add(di.Def{
-		Name: static.DiDatabase,
+		Name: static2.DiDatabase,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return inits.InitDatabase(ctn)
 		},
@@ -49,9 +57,33 @@ func main() {
 		},
 	})
 
+	// Auth refresh token handler
+	diBuilder.Add(di.Def{
+		Name: static.DiAuthRefreshTokenHandler,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return auth.NewRefreshTokenHandlerImpl(ctn), nil
+		},
+	})
+
+	// Auth access token handler
+	diBuilder.Add(di.Def{
+		Name: static.DiAuthAccessTokenHandler,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return auth.NewAccessTokenHandlerImpl(ctn), nil
+		},
+	})
+
+	// Auth middleware
+	diBuilder.Add(di.Def{
+		Name: static.DiAuthMiddleware,
+		Build: func(ctn di.Container) (interface{}, error) {
+			return auth.NewAccessTokenMiddleware(ctn), nil
+		},
+	})
+
 	// Webserver dependency
 	diBuilder.Add(di.Def{
-		Name: static.DiWebserver,
+		Name: static2.DiWebserver,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return inits.InitWebserver(ctn), nil
 		},
@@ -68,7 +100,7 @@ func main() {
 		}
 	}(ctn)
 
-	ctn.Get(static.DiWebserver)
+	ctn.Get(static2.DiWebserver)
 
 	// Block main go routine until one of the following
 	// specified exit sys calls occure.

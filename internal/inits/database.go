@@ -5,7 +5,7 @@ import (
 	"github.com/zekurio/snip/internal/models"
 	"github.com/zekurio/snip/internal/services/database"
 	"github.com/zekurio/snip/internal/services/database/postgres"
-	"github.com/zekurio/snip/internal/services/util/static"
+	"github.com/zekurio/snip/internal/util/static"
 )
 
 func InitDatabase(ctn di.Container) (db database.IDatabase, err error) {

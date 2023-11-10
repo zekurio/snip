@@ -4,8 +4,8 @@ import (
 	"github.com/sarulabs/di/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/models"
-	"github.com/zekurio/snip/internal/services/util/static"
 	"github.com/zekurio/snip/internal/services/webserver"
+	"github.com/zekurio/snip/internal/util/static"
 )
 
 func InitWebserver(ctn di.Container) (ws *webserver.WebServer) {

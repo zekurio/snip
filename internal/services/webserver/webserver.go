@@ -5,9 +5,9 @@ import (
 	"github.com/sarulabs/di/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/models"
-	"github.com/zekurio/snip/internal/services/util/static"
 	v1 "github.com/zekurio/snip/internal/services/webserver/v1"
 	"github.com/zekurio/snip/internal/services/webserver/v1/controllers"
+	"github.com/zekurio/snip/internal/util/static"
 )
 
 type WebServer struct {

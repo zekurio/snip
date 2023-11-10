@@ -1,12 +1,12 @@
 package controllers
 
 import (
+	"github.com/zekurio/snip/internal/util/static"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sarulabs/di/v2"
 	"github.com/zekurio/snip/internal/services/database"
-	"github.com/zekurio/snip/internal/services/util/static"
 )
 
 type RedirectController struct {

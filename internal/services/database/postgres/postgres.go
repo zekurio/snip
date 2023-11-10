@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -52,8 +53,8 @@ func (p *Postgres) Close() error {
 // Users
 
 func (p *Postgres) AddUpdateUser(user *models.User) error {
-	query := `INSERT INTO users (uuid, email, password) VALUES ($1, $2, $3) ON CONFLICT (uuid) DO UPDATE SET email = $2, password = $3`
-	_, err := p.db.Exec(query, user.UUID, user.Username, user.Password)
+	query := `INSERT INTO users (id, username, password) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET username = $2, password = $3`
+	_, err := p.db.Exec(query, user.ID, user.Username, user.Password)
 	if err != nil {
 		return err
 	}
@@ -62,12 +63,12 @@ func (p *Postgres) AddUpdateUser(user *models.User) error {
 }
 
 func (p *Postgres) GetUserByUsername(username string) (*models.User, error) {
-	query := `SELECT uuid, password FROM users WHERE username = $1`
+	query := `SELECT id, password FROM users WHERE username = $1`
 	var user models.User
-	err := p.db.QueryRow(query, username).Scan(&user.UUID, &user.Password)
+	err := p.db.QueryRow(query, username).Scan(&user.ID, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no user found with email %s", username)
+			return nil, fmt.Errorf("no user found with username %s", username)
 		}
 		return nil, err
 	}
@@ -75,13 +76,13 @@ func (p *Postgres) GetUserByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (p *Postgres) GetUserByID(id string) (*models.User, error) {
-	query := `SELECT email, password FROM users WHERE uuid = $1`
+func (p *Postgres) GetUserByID(userID string) (*models.User, error) {
+	query := `SELECT username, password FROM users WHERE id = $1`
 	var user models.User
-	err := p.db.QueryRow(query, id).Scan(&user.Username, &user.Password)
+	err := p.db.QueryRow(query, userID).Scan(&user.Username, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no user found with id %s", id)
+			return nil, fmt.Errorf("no user found with id %s", userID)
 		}
 		return nil, err
 	}
@@ -92,8 +93,9 @@ func (p *Postgres) GetUserByID(id string) (*models.User, error) {
 // Links
 
 func (p *Postgres) AddUpdateLink(link *models.Link) error {
-	query := `INSERT INTO links (id, url, user_uuid, created_at, last_access) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET url = $2, last_access = $5`
-	_, err := p.db.Exec(query, link.ID, link.URL, link.UserID, link.CreatedAt, link.LastAccess)
+	query := `INSERT INTO links (id, redirect_url, owner_id, created_at, last_access)
+		VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET redirect_url = $2, last_access = $5`
+	_, err := p.db.Exec(query, link.ID, link.URL, link.OwnerID, link.CreatedAt, link.LastAccess)
 	if err != nil {
 		return err
 	}
@@ -101,13 +103,13 @@ func (p *Postgres) AddUpdateLink(link *models.Link) error {
 	return nil
 }
 
-func (p *Postgres) GetLinkByID(id string) (*models.Link, error) {
-	query := `SELECT url, user_uuid, created_at, last_access FROM links WHERE id = $1`
+func (p *Postgres) GetLinkByID(linkID string) (*models.Link, error) {
+	query := `SELECT redirect_url, owner_id, created_at, last_access FROM links WHERE id = $1`
 	var link models.Link
-	err := p.db.QueryRow(query, id).Scan(&link.URL, &link.UserID, &link.CreatedAt, &link.LastAccess)
+	err := p.db.QueryRow(query, linkID).Scan(&link.URL, &link.OwnerID, &link.CreatedAt, &link.LastAccess)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no link found with id %s", id)
+			return nil, fmt.Errorf("no link found with id %s", linkID)
 		}
 		return nil, err
 	}
@@ -115,9 +117,9 @@ func (p *Postgres) GetLinkByID(id string) (*models.Link, error) {
 	return &link, nil
 }
 
-func (p *Postgres) GetLinksByUser(uuid string) ([]*models.Link, error) {
-	query := `SELECT id, url, created_at, last_access FROM links WHERE user_uuid = $1`
-	rows, err := p.db.Query(query, uuid)
+func (p *Postgres) GetLinksByUser(userID string) ([]*models.Link, error) {
+	query := `SELECT id, redirect_url, created_at, last_access FROM links WHERE owner_id = $1`
+	rows, err := p.db.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,19 +133,40 @@ func (p *Postgres) GetLinksByUser(uuid string) ([]*models.Link, error) {
 			return nil, err
 		}
 
-		link.UserID = uuid
+		link.OwnerID = userID
 		links = append(links, &link)
 	}
 
 	return links, nil
 }
 
-func (p *Postgres) DeleteLink(id string) error {
+func (p *Postgres) DeleteLink(linkID string) error {
 	query := `DELETE FROM links WHERE id = $1`
-	_, err := p.db.Exec(query, id)
+	_, err := p.db.Exec(query, linkID)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// Refresh Tokens
+
+func (p *Postgres) SetUserRefreshToken(ident, token string, expires time.Time) error {
+	query := `INSERT INTO refresh_tokens (ident, token, expires) VALUES ($1, $2, $3) ON CONFLICT (ident) DO UPDATE SET token = $2, expires = $3`
+	_, err := p.db.Exec(query, ident, token, expires)
+	return err
+}
+
+func (p *Postgres) GetUserByRefreshToken(token string) (ident string, expires time.Time, err error) {
+	query := `SELECT ident, expires FROM refresh_tokens WHERE token = $1`
+	row := p.db.QueryRow(query, token)
+	err = row.Scan(&ident, &expires)
+	return ident, expires, err
+}
+
+func (p *Postgres) RevokeUserRefreshToken(ident string) error {
+	query := `DELETE FROM refresh_tokens WHERE ident = $1`
+	_, err := p.db.Exec(query, ident)
+	return err
 }

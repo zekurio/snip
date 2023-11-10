@@ -1,6 +1,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/zekurio/snip/internal/models"
 )
 
@@ -35,4 +37,15 @@ type IDatabase interface {
 
 	// DeleteLink deletes a link with the given id
 	DeleteLink(id string) error
+
+	// Refresh Tokens
+
+	// SetUserRefreshToken sets a refresh token for the given user
+	SetUserRefreshToken(ident, token string, expires time.Time) error
+
+	// GetUserByRefreshToken returns a user with the given refresh tokens
+	GetUserByRefreshToken(token string) (ident string, expires time.Time, err error)
+
+	// RevokeUserRefreshToken revokes a refresh token for the given user
+	RevokeUserRefreshToken(ident string) error
 }
