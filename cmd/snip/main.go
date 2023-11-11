@@ -6,10 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/zekurio/snip/internal/util/static"
-	static2 "github.com/zekurio/snip/internal/util/static"
-	"github.com/zekurio/snip/pkg/debug"
-
 	"github.com/sarulabs/di/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/zekurio/snip/internal/inits"
@@ -17,6 +13,8 @@ import (
 	"github.com/zekurio/snip/internal/services/config"
 	"github.com/zekurio/snip/internal/services/database"
 	"github.com/zekurio/snip/internal/services/webserver/auth"
+	"github.com/zekurio/snip/internal/util/static"
+	"github.com/zekurio/snip/pkg/debug"
 )
 
 var (
@@ -38,7 +36,7 @@ func main() {
 
 	// Config dependency
 	diBuilder.Add(di.Def{
-		Name: static2.DiConfig,
+		Name: static.DiConfig,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return config.Parse(*flagConfigPath, "SNIP_", models.DefaultConfig)
 		},
@@ -46,7 +44,7 @@ func main() {
 
 	// Database and cache dependency
 	diBuilder.Add(di.Def{
-		Name: static2.DiDatabase,
+		Name: static.DiDatabase,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return inits.InitDatabase(ctn)
 		},
@@ -91,7 +89,7 @@ func main() {
 
 	// Webserver dependency
 	diBuilder.Add(di.Def{
-		Name: static2.DiWebserver,
+		Name: static.DiWebserver,
 		Build: func(ctn di.Container) (interface{}, error) {
 			return inits.InitWebserver(ctn), nil
 		},
@@ -108,7 +106,7 @@ func main() {
 		}
 	}(ctn)
 
-	ctn.Get(static2.DiWebserver)
+	ctn.Get(static.DiWebserver)
 
 	// Block main go routine until one of the following
 	// specified exit sys calls occure.
