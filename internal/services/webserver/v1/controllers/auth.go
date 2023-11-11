@@ -39,8 +39,9 @@ func (c *AuthController) postLogin(ctx *fiber.Ctx) error {
 	login := new(models.UserLoginDetails)
 
 	if err := ctx.BodyParser(login); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Cannot parse JSON",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusBadRequest,
+			Message: "cannot parse json",
 		})
 	}
 
@@ -50,14 +51,16 @@ func (c *AuthController) postLogin(ctx *fiber.Ctx) error {
 
 	user, err := c.db.GetUserByUsername(login.Username)
 	if err != nil || user == nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Credentials don't match the records",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusUnauthorized,
+			Message: "user not found",
 		})
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Credentials don't match the records",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusUnauthorized,
+			Message: "credentials don't match the records",
 		})
 	}
 
@@ -72,45 +75,53 @@ func (c *AuthController) postSignup(ctx *fiber.Ctx) error {
 	user := new(models.User)
 
 	if err := ctx.BodyParser(user); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Cannot parse JSON",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusBadRequest,
+			Message: "cannot parse json",
 		})
 	}
 
 	user.ID = uuid.New().String()
 
-	// check if user already exists by UUID
 	existingUser, err := c.db.GetUserByID(user.ID)
 	if err == nil && existingUser != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "User UUID already exists",
-		})
+		for {
+			existingUser, err := c.db.GetUserByID(user.ID)
+			if err != nil {
+				break
+			}
+			if existingUser != nil {
+				user.ID = uuid.New().String()
+			}
+		}
 	}
 
-	// check if user already exists by username
 	existingUser, err = c.db.GetUserByUsername(user.Username)
 	if err == nil && existingUser != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "User already exists",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusBadRequest,
+			Message: "username already exists",
 		})
 	}
 
 	hashBytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Cannot hash password",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusInternalServerError,
+			Message: "failed to hash password",
 		})
 	}
 
 	user.Password = string(hashBytes)
 
 	if err := c.db.AddUpdateUser(user); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Cannot add user",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusInternalServerError,
+			Message: "failed to create user",
 		})
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(models.Ok)
+	return ctx.JSON(user)
 }
 
 func (c *AuthController) postAccessToken(ctx *fiber.Ctx) error {
@@ -142,8 +153,9 @@ func (c *AuthController) postLogout(ctx *fiber.Ctx) error {
 	id := ctx.Locals("uuid").(string)
 
 	if err := c.rth.RevokeToken(id); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Cannot revoke token",
+		return ctx.JSON(models.Status{
+			Code:    fiber.StatusInternalServerError,
+			Message: "failed to revoke token",
 		})
 	}
 
