@@ -10,10 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tabler/icons-react": "^2.40.0",
+    "color": "^4.2.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.18.0",
+    "styled-components": "^6.1.1",
+    "zustand": "^4.4.6",
+    "@react-buddy/ide-toolbox": "^2.4.0"
   },
   "devDependencies": {
+    "@types/color": "^3",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -22,6 +29,8 @@
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "prettier": "3.0.3",
+    "sass": "^1.69.5",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
   }
